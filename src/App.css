@@ -1,0 +1,168 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #081229, #0f172a);
+  color: white;
+}
+
+.app {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 55px;
+  font-weight: bold;
+  margin-bottom: 30px;
+}
+
+/* Total Card */
+.total-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 25px;
+  padding: 35px;
+  text-align: center;
+  margin-bottom: 25px;
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+}
+
+.total-card h2 {
+  font-size: 35px;
+  margin: 10px 0;
+}
+
+/* Form Card */
+.form-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 25px;
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+}
+
+.form-card h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Input Styling */
+input {
+  width: 100%;
+  padding: 16px;
+  margin: 12px 0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 15px;
+  background: rgba(255,255,255,0.06);
+  color: white;
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+input:focus {
+  border: 1px solid #8b5cf6;
+  box-shadow: 0 0 15px rgba(139,92,246,0.5);
+  background: rgba(255,255,255,0.08);
+}
+
+/* Button */
+button {
+  width: 100%;
+  padding: 15px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+button:hover {
+  transform: scale(1.03);
+  box-shadow: 0px 8px 20px rgba(139,92,246,0.4);
+}
+
+/* Chart Card */
+.chart-card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 25px;
+  padding: 30px;
+  margin-bottom: 25px;
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+}
+
+.chart-card h2 {
+  margin-bottom: 20px;
+}
+
+/* Expense List */
+.list-card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  border-radius: 25px;
+  padding: 30px;
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.3);
+}
+
+.list-card h2 {
+  margin-bottom: 20px;
+}
+
+/* Expense Item */
+.expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255,255,255,0.05);
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+.expense-item h4 {
+  margin: 0;
+}
+
+.expense-item p {
+  margin: 5px 0 0;
+  color: rgba(255,255,255,0.6);
+  font-size: 14px;
+}
+
+/* Right Side */
+.right-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.right-section span {
+  font-weight: bold;
+  color: #8b5cf6;
+}
+
+/* Delete Button */
+.delete-btn {
+  width: auto;
+  padding: 8px 12px;
+  background: crimson;
+  border-radius: 10px;
+}
+
+.delete-btn:hover {
+  background: red;
+}
