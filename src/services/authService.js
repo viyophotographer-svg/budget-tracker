@@ -1,7 +1,7 @@
 import { supabase } from '../supabase';
 
 // Sign up new user
-export const signUp = async (email, password, name) => {
+export const signUp = async (email, password) => {
   try {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -10,13 +10,9 @@ export const signUp = async (email, password, name) => {
 
     if (authError) throw authError;
 
-    if (authData.user) {
-      await createUserProfile(authData.user.id, email, name);
-    }
-
     return authData.user;
   } catch (error) {
-    console.error('Error signing up:', error);
+    console.error("Error signing up:", error);
     throw error;
   }
 };
@@ -84,8 +80,8 @@ export const createUserProfile = async (userId, email, name = '') => {
         {
           id: userId,
           email,
-          name: name || email.split('@')[0],
-          avatar: null,
+          full_name: name || email.split('@')[0],
+          avatar_url: null,
           created_at: new Date().toISOString(),
         },
       ])
