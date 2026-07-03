@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+function validate() {
+    var dob = document.getElementById("date").value;
+    var date = new Date(dob);
+    var now = new Date();
+
+    var age = now.getFullYear() - date.getFullYear();
+
+    if (age >= 18) {
+        alert("Eligible");
+    } else {
+        alert("Not Eligible");
+    }
+}
+</script>
+</head>
+
+<body>
+    <input type="date" id="date">
+    <button onclick="validate()">Check Eligibility</button>
+</body>
+</html>

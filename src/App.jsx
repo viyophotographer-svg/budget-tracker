@@ -1,172 +1,207 @@
-import { useState, useEffect } from "react";
-import { supabase } from "./supabase";
-import {
-  Wallet,
-  Plus,
-  Trash2,
-  BarChart3
-} from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { onAuthStateChange, logout } from './services/authService';
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
+// Pages
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Dashboard from './pages/Dashboard';
+import Transactions from './pages/Transactions';
+import Analytics from './pages/Analytics';
+import SavingsGoals from './pages/SavingsGoals';
+import Profile from './pages/Profile';
 
-import "./App.css";
+// Components
+import Sidebar from './components/Sidebar';
+import Navbar from './components/Navbar';
 
-function App() {
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("");
-  const [expenses, setExpenses] = useState([]);
+// Create Auth Context
+export const AuthContext = React.createContext();
+
+export function useAuth() {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+}
+
+// Auth Provider
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchExpenses();
+    // Check initial auth state
+    const checkAuth = async () => {
+      try {
+        const unsubscribe = onAuthStateChange((event, authUser) => {
+          setUser(authUser);
+          setLoading(false);
+        });
+
+        return unsubscribe;
+      } catch (error) {
+        console.error('Auth check error:', error);
+        setLoading(false);
+      }
+    };
+
+    let unsubscribe;
+    checkAuth().then((unsub) => {
+      unsubscribe = unsub;
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  async function fetchExpenses() {
-    const { data, error } = await supabase
-      .from("expenses")
-      .select("*")
-      .order("id", { ascending: false });
-
-    if (!error) {
-      setExpenses(data);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
     }
-  }
-
-  async function addExpense() {
-    if (!amount || !category) {
-      alert("Please fill all fields");
-      return;
-    }
-
-    const currentDate = new Date().toISOString();
-
-    const { error } = await supabase
-      .from("expenses")
-      .insert([
-        {
-          amount,
-          category,
-          date: currentDate
-        }
-      ]);
-
-    if (!error) {
-      fetchExpenses();
-      setAmount("");
-      setCategory("");
-    }
-  }
-
-  async function deleteExpense(id) {
-    await supabase
-      .from("expenses")
-      .delete()
-      .eq("id", id);
-
-    fetchExpenses();
-  }
-
-  const totalSpent = expenses.reduce(
-    (total, item) => total + Number(item.amount),
-    0
-  );
-
-  const chartData = expenses.map((item) => ({
-    name: item.category,
-    amount: Number(item.amount)
-  }));
+  };
 
   return (
-    <div className="app">
-      <h1>Budget Dashboard</h1>
+    <AuthContext.Provider value={{ user, loading, logout: handleLogout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
-      {/* Total Spending Card */}
-      <div className="total-card">
-        <Wallet size={30} />
-        <h2>₹{totalSpent}</h2>
-        <p>Total Spent This Month</p>
+// Protected Route
+function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+          <p className="text-white">Loading...</p>
+        </div>
       </div>
+    );
+  }
 
-      {/* Add Expense */}
-      <div className="form-card">
-        <h2>
-          <Plus size={18} /> Add Expense
-        </h2>
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
 
-        <input
-          type="number"
-          placeholder="Enter amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-        />
+  return children;
+}
 
-        <input
-          type="text"
-          placeholder="Enter category"
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-        />
-
-        <button onClick={addExpense}>
-          Add Expense
-        </button>
-      </div>
-
-      {/* Chart */}
-      <div className="chart-card">
-        <h2>
-          <BarChart3 size={18} /> Spending Chart
-        </h2>
-
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={chartData}>
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Bar
-              dataKey="amount"
-              fill="#8b5cf6"
-              radius={[10, 10, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Recent Expenses */}
-      <div className="list-card">
-        <h2>Recent Expenses</h2>
-
-        {expenses.map((item) => (
-          <div className="expense-item" key={item.id}>
-            <div>
-              <h4>{item.category}</h4>
-
-              <p>
-                {new Date(item.date).toLocaleString()}
-              </p>
-            </div>
-
-            <div className="right-section">
-              <span>₹{item.amount}</span>
-
-              <button
-                className="delete-btn"
-                onClick={() => deleteExpense(item.id)}
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </div>
-        ))}
+// Main Layout
+function MainLayout({ children }) {
+  return (
+    <div className="flex h-screen bg-gradient-to-br from-slate-900 to-slate-800">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden md:ml-64">
+        <Navbar />
+        <main className="flex-1 overflow-auto">
+          <div className="p-6 max-w-7xl mx-auto">{children}</div>
+        </main>
       </div>
     </div>
   );
 }
 
-export default App;
+// Main App Component
+export default function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          {/* Auth Pages */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Protected Pages */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Dashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Dashboard />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Transactions />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Analytics />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/savings-goals"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <SavingsGoals />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Profile />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <MainLayout>
+                  <Profile />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Catch all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
+  );
+}
