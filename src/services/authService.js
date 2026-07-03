@@ -120,24 +120,17 @@ export const getUserProfile = async (userId) => {
 // Update user profile
 export const updateUserProfile = async (userId, updates) => {
   try {
-    console.log("========== UPDATE PROFILE ==========");
-    console.log("User ID:", userId);
-    console.log("Updates:", updates);
-
     const { data, error } = await supabase
-      .from("profiles")
+      .from('profiles')
       .update(updates)
-      .eq("id", userId)
-      .select();
-
-    console.log("Data:", data);
-    console.log("Error:", error);
+      .eq('id', userId)
+      .select()
+      .single();
 
     if (error) throw error;
-
     return data;
   } catch (error) {
-    console.error("Full Error:", error);
+    console.error('Error updating user profile:', error);
     throw error;
   }
 };
