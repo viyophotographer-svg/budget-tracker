@@ -1,34 +1,39 @@
 import React, { useState } from 'react';
 import { Bell, LogOut, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const handleLogout = () => {
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (err) {
+      console.error('Error logging out:', err);
+    }
   };
 
   return (
     <nav className="bg-gradient-to-r from-slate-800 to-slate-900 border-b border-slate-700 px-6 py-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">BudgetPro Dashboard</h1>
-        
+        <h1 className="text-xl font-bold text-white pl-12 md:pl-0">BudgetPro Dashboard</h1>
+
         <div className="flex items-center gap-4">
-          {/* Notification Bell */}
           <button className="p-2 hover:bg-slate-700 rounded-lg transition text-slate-300">
             <Bell className="w-5 h-5" />
           </button>
 
-          {/* Profile Dropdown */}
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-2 px-3 py-2 hover:bg-slate-700 rounded-lg transition text-slate-300"
             >
               <div className="w-8 h-8 rounded-full bg-blue-500"></div>
-              <span className="text-sm">Account</span>
+              <span className="text-sm hidden sm:inline">Account</span>
             </button>
 
             {dropdownOpen && (
