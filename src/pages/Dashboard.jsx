@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   TrendingUp,
   TrendingDown,
@@ -419,12 +419,12 @@ export default function Dashboard() {
             Recent Transactions
           </h3>
 
-          <a
-            href="/transactions"
+          <Link
+            to="/transactions"
             className="text-blue-400 hover:text-blue-300 text-sm font-medium transition"
           >
             View All →
-          </a>
+          </Link>
         </div>
 
         <div className="space-y-3">
