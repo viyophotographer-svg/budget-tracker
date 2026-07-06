@@ -47,6 +47,32 @@ export const createTransaction = async (userId, transaction) => {
   }
 };
 
+// Bulk-insert multiple transactions at once (used by CSV import)
+export const bulkInsertTransactions = async (userId, transactionsArray) => {
+  try {
+    const rows = transactionsArray.map((t) => ({
+      user_id: userId,
+      notes: t.notes,
+      amount: t.amount,
+      category: t.category,
+      type: t.type,
+      transaction_date: t.transaction_date || new Date().toISOString(),
+    }));
+
+    const { data, error } = await supabase
+      .from("transactions")
+      .insert(rows)
+      .select();
+
+    if (error) throw error;
+
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
 // Update an existing transaction
 export const updateTransaction = async (transactionId, updates) => {
   try {
