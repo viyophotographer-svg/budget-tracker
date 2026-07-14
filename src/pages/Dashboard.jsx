@@ -13,6 +13,8 @@ import { useAuth } from "../hooks/useAuth";
 import { supabase } from "../supabase";
 import { createTransaction } from "../services/transactionService";
 import { getSavingsGoals } from "../services/savingsService";
+import { getUserProfile } from "../services/authService";
+import { getBudget } from "../services/budgetService";
 import BudgetProgress from "../components/BudgetProgress";
 import StatCard from "../components/StatCard";
 
@@ -172,6 +174,7 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [displayName, setDisplayName] = useState("");
 
   const [stats, setStats] = useState({
     totalBalance: 0,
@@ -204,13 +207,25 @@ export default function Dashboard() {
 
       if (error) throw error;
 
-      const totalIncome = (data || [])
+      const transactionIncome = (data || [])
         .filter((t) => t.type === "income")
         .reduce((sum, t) => sum + Number(t.amount), 0);
 
       const totalExpenses = (data || [])
         .filter((t) => t.type === "expense")
         .reduce((sum, t) => sum + Number(t.amount), 0);
+
+      // Include this month's budget allocation as part of income/balance,
+      // in addition to actual income transactions.
+      let budgetAmount = 0;
+      try {
+        const budgetData = await getBudget(user.id);
+        budgetAmount = budgetData?.budget || 0;
+      } catch (budgetErr) {
+        console.error("Error fetching budget for stats:", budgetErr);
+      }
+
+      const totalIncome = transactionIncome + budgetAmount;
 
       setStats((prev) => ({
         ...prev,
@@ -222,6 +237,18 @@ export default function Dashboard() {
       console.error("Error fetching dashboard stats:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDisplayName = async () => {
+    if (!user) return;
+
+    try {
+      const profile = await getUserProfile(user.id);
+      setDisplayName(profile?.full_name || user.email?.split("@")[0] || "");
+    } catch (err) {
+      console.error("Error fetching profile name:", err);
+      setDisplayName(user.email?.split("@")[0] || "");
     }
   };
 
@@ -264,6 +291,39 @@ export default function Dashboard() {
     fetchStats();
     fetchRecentTransactions();
     fetchSavingsGoalsCount();
+    fetchDisplayName();
+
+    const profileChannel = supabase
+      .channel("dashboard-profile")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "profiles",
+          filter: `id=eq.${user.id}`,
+        },
+        () => {
+          fetchDisplayName();
+        }
+      )
+      .subscribe();
+
+    const budgetChannel = supabase
+      .channel("dashboard-budget")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "budgets",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchStats();
+        }
+      )
+      .subscribe();
 
     const transactionsChannel = supabase
       .channel("dashboard-transactions")
@@ -301,6 +361,8 @@ export default function Dashboard() {
     return () => {
       supabase.removeChannel(transactionsChannel);
       supabase.removeChannel(savingsChannel);
+      supabase.removeChannel(profileChannel);
+      supabase.removeChannel(budgetChannel);
     };
   }, [user]);
 
@@ -319,7 +381,7 @@ export default function Dashboard() {
       <div className="mb-8 flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">
-            Welcome back, {user?.email?.split("@")[0]}! 👋
+            Welcome back, {displayName || user?.email?.split("@")[0]}! 👋
           </h1>
           <p className="text-slate-400">
             Here's your financial overview
