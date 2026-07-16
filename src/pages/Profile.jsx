@@ -289,9 +289,7 @@ export default function Profile() {
                 className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-white"
               >
                 <option value="INR">Indian Rupee (₹)</option>
-                <option value="USD">US Dollar ($)</option>
-                <option value="EUR">Euro (€)</option>
-                <option value="GBP">British Pound (£)</option>
+              
               </select>
             </div>
 

@@ -200,10 +200,19 @@ export default function Dashboard() {
     if (!user) return;
 
     try {
+      // Only count transactions from the current calendar month, to match
+      // the Monthly Budget card's scope.
+      const now = new Date();
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const monthEnd = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, "0")}-01`;
+
       const { data, error } = await supabase
         .from("transactions")
         .select("amount, type")
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .gte("transaction_date", monthStart)
+        .lt("transaction_date", monthEnd);
 
       if (error) throw error;
 
@@ -393,21 +402,21 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
         <StatCard
-          title="Total Balance"
+          title="This Month's Balance"
           value={stats.totalBalance.toLocaleString()}
           icon={Wallet}
           color="blue"
         />
 
         <StatCard
-          title="Total Income"
+          title="This Month's Income"
           value={stats.totalIncome.toLocaleString()}
           icon={TrendingUp}
           color="green"
         />
 
         <StatCard
-          title="Total Expenses"
+          title="This Month's Expenses"
           value={stats.totalExpenses.toLocaleString()}
           icon={TrendingDown}
           color="red"
